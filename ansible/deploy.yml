@@ -36,10 +36,12 @@
       args:
         executable: /bin/bash
 
-    - name: Run the app using venv
+    - name: Run the app using venv in background (async)
       shell: |
-        pkill -f "python3" || true
+        pkill -f "python" || true
         source /home/sajja_vamsi/app/venv/bin/activate
         nohup python /home/sajja_vamsi/app/app.py > /home/sajja_vamsi/app/log.txt 2>&1 &
       args:
         executable: /bin/bash
+      async: 60
+      poll: 0
