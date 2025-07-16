@@ -12,14 +12,7 @@ pipeline {
       }
     }
 
-    stage('Install Ansible') {
-      steps {
-        sh '''
-          # only if Ansible isn’t already on your Jenkins node
-          sudo apt update && sudo apt install -y ansible
-        '''
-      }
-    }
+
 
     stage('Deploy via Ansible') {
       steps {
