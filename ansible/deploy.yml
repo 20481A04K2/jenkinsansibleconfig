@@ -1,0 +1,24 @@
+---
+- name: Deploy app from Jenkins GitHub clone to all servers
+  hosts: webservers
+  become: yes
+
+  tasks:
+    - name: Ensure app directory exists
+      file:
+        path: /home/sajja_vamsi/app
+        state: directory
+        mode: '0755'
+
+    - name: Copy code from Jenkins workspace
+      copy:
+        src: "{{ playbook_dir }}/../"    # one level up, i.e. the repo root
+        dest: /home/sajja_vamsi/app/
+        mode: '0755'
+
+    - name: Run the app
+      shell: |
+        pkill -f "python3" || true
+        nohup python3 /home/sajja_vamsi/app/app.py > /home/sajja_vamsi/app/log.txt 2>&1 &
+      args:
+        executable: /bin/bash
