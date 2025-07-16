@@ -8,12 +8,16 @@
       file:
         path: /home/sajja_vamsi/app
         state: directory
+        owner: sajja_vamsi
+        group: sajja_vamsi
         mode: '0755'
 
     - name: Copy code from Jenkins workspace
       copy:
         src: "{{ playbook_dir }}/../"
         dest: /home/sajja_vamsi/app/
+        owner: sajja_vamsi
+        group: sajja_vamsi
         mode: '0755'
 
     - name: Ensure Python3 and venv are installed
@@ -36,12 +40,32 @@
       args:
         executable: /bin/bash
 
-    - name: Run the app using venv in background (async)
-      shell: |
-        pkill -f "python" || true
-        source /home/sajja_vamsi/app/venv/bin/activate
-        nohup python /home/sajja_vamsi/app/app.py > /home/sajja_vamsi/app/log.txt 2>&1 &
-      args:
-        executable: /bin/bash
-      async: 60
-      poll: 0
+    - name: Create systemd service file for Flask app
+      copy:
+        dest: /etc/systemd/system/flask-app.service
+        content: |
+          [Unit]
+          Description=Flask App Service
+          After=network.target
+
+          [Service]
+          User=sajja_vamsi
+          WorkingDirectory=/home/sajja_vamsi/app
+          ExecStart=/home/sajja_vamsi/app/venv/bin/python /home/sajja_vamsi/app/app.py
+          Restart=always
+          Environment=FLASK_ENV=production
+
+          [Install]
+          WantedBy=multi-user.target
+      notify:
+        - Reload systemd
+
+    - name: Enable and start flask-app service
+      systemd:
+        name: flask-app
+        enabled: yes
+        state: restarted
+
+  handlers:
+    - name: Reload systemd
+      command: systemctl daemon-reexec
